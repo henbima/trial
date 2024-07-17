@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎙️</text></svg>" />
+    <title>Upload and Send Voice Memo</title>
+    <style>
+        #progressContainer {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+            margin-top: 10px;
+        }
+        #progressBar {
+            width: 0;
+            height: 30px;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h2>Upload a voice memo</h2>
+        <input type="file" id="uploadInput" accept="audio/*">
+        <audio id="audio" controls></audio>
+        <div id="progressContainer">
+            <div id="progressBar">0%</div>
+        </div>
+    </div>
+</body>
+<script>
+    const uploadInput = document.getElementById('uploadInput');
+    const audio = document.getElementById('audio');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const audioUrl = URL.createObjectURL(file);
+            audio.src = audioUrl;
+            audio.controls = true;
+            const fileName = generateFileName(file);
+            sendAudioData(file, fileName);
+        }
+    }
+
+    function sendAudioData(data, fileName) {
+        const serverUrl = "https://hook.eu2.make.com/b5jipp5t5my47i4zl7m378qowf7eaacu";
+        const formData = new FormData();
+        formData.set('file', data, fileName);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", serverUrl, true);
+
+        xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                progressContainer.style.display = 'block';
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = Math.round(percentComplete) + '%';
+            }
+        });
+
+        xhr.addEventListener("load", () => {
+            console.log(`Audio data (${fileName}) sent to server.`);
+            progressBar.textContent = 'Upload Complete';
+        });
+
+        xhr.addEventListener("error", () => {
+            console.error("Error sending audio data to server.");
+            progressBar.textContent = 'Upload Failed';
+        });
+
+        xhr.send(formData);
+    }
+
+    function generateFileName(file) {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const timestamp = date.getTime().toString();
+        const extension = file.name.split('.').pop();
+        return `${year}-${month}-${day}-${timestamp}.${extension}`;
+    }
+
+    uploadInput.addEventListener('change', handleFileUpload);
+</script>
+</html>
