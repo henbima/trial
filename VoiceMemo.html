@@ -1,61 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Video Uploader</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upload</title>
     <style>
-        #progress-bar {
-            width: 0;
+        .progress {
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+
+        .progress-bar {
+            width: 0%;
             height: 30px;
             background-color: #4caf50;
             text-align: center;
             line-height: 30px;
             color: white;
         }
-        #progress-container {
-            width: 100%;
-            background-color: #ddd;
-        }
     </style>
 </head>
 <body>
-    <h2>Upload Video v0.1</h2>
-    <input type="file" id="file-input" accept="video/*"><br><br>
-    <div id="progress-container">
-        <div id="progress-bar">0%</div>
+    <h1>Upload Your Video</h1>
+    <input type="file" id="videoFile" accept="video/*">
+    <button onclick="uploadVideo()">Upload</button>
+    <div class="progress">
+        <div class="progress-bar" id="progressBar">0%</div>
     </div>
-    <br>
-    <button onclick="uploadFile()">Upload</button>
+    <p id="status"></p>
 
     <script>
-        function uploadFile() {
-            var file = document.getElementById("file-input").files[0];
+        async function uploadVideo() {
+            const file = document.getElementById('videoFile').files[0];
             if (!file) {
-                alert("Please select a file.");
+                alert('Please select a video file.');
                 return;
             }
 
-            var formData = new FormData();
-            formData.append("file", file);
+            const fileName = encodeURIComponent(file.name);
+            const uploadUrl = `https://storage.googleapis.com/upload/storage/v1/b/my-video-storage/o?uploadType=media&name=${fileName}`;
 
-            var xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener("progress", function(e) {
-                var percentComplete = Math.round((e.loaded / e.total) * 100);
-                document.getElementById("progress-bar").style.width = percentComplete + "%";
-                document.getElementById("progress-bar").innerHTML = percentComplete + "%";
-            });
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', uploadUrl, true);
+            xhr.setRequestHeader('Content-Type', file.type);
+            xhr.setRequestHeader('Authorization', 'Bearer YOUR_ACCESS_TOKEN'); // Replace with your access token
 
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        alert("Upload complete");
-                    } else {
-                        alert("Upload failed: " + xhr.responseText);
-                    }
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressBar').style.width = percentComplete + '%';
+                    document.getElementById('progressBar').innerText = Math.round(percentComplete) + '%';
                 }
             };
 
-            xhr.open("POST", "https://video-transcription-function-stf7l4vdyq-uc.a.run.app/", true);
-            xhr.send(formData);
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    document.getElementById('status').innerText = 'Upload successful!';
+                } else {
+                    document.getElementById('status').innerText = 'Upload failed!';
+                }
+            };
+
+            xhr.onerror = () => {
+                document.getElementById('status').innerText = 'Upload error!';
+            };
+
+            xhr.send(file);
         }
     </script>
 </body>
