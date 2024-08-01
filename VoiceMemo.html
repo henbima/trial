@@ -18,7 +18,7 @@
     </style>
 </head>
 <body>
-    <h2>Upload Video</h2>
+    <h2>Upload Video v0.1</h2>
     <input type="file" id="file-input" accept="video/*"><br><br>
     <div id="progress-container">
         <div id="progress-bar">0%</div>
@@ -29,6 +29,11 @@
     <script>
         function uploadFile() {
             var file = document.getElementById("file-input").files[0];
+            if (!file) {
+                alert("Please select a file.");
+                return;
+            }
+
             var formData = new FormData();
             formData.append("file", file);
 
@@ -40,8 +45,12 @@
             });
 
             xhr.onreadystatechange = function() {
-                if (xhr.readyState == 4 && xhr.status == 200) {
-                    alert("Upload complete");
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        alert("Upload complete");
+                    } else {
+                        alert("Upload failed: " + xhr.responseText);
+                    }
                 }
             };
 
