@@ -2,6 +2,23 @@
 <html>
 <head>
     <title>Video Upload</title>
+    <style>
+        #progressWrapper {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+        #progressBar {
+            width: 0%;
+            height: 30px;
+            background-color: #4caf50;
+        }
+        #message {
+            display: none;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <h1>Upload Video</h1>
@@ -9,11 +26,14 @@
         <input type="file" id="videoFile" accept="video/*" required>
         <button type="submit">Upload</button>
     </form>
+    <div id="progressWrapper">
+        <div id="progressBar"></div>
+    </div>
+    <div id="message"></div>
 
     <script>
         async function getPresignedUrl(fileName) {
-            // Replace with your endpoint to get a presigned URL
-            const response = await fetch(`https://i6bpqmp4gd.execute-api.ap-southeast-2.amazonaws.com/prod`);
+            const response = await fetch(`https://abcde12345.execute-api.us-west-2.amazonaws.com/prod/presigned-url?fileName=${fileName}`);
             const data = await response.json();
             return data.url;
         }
@@ -23,19 +43,41 @@
             const file = document.getElementById('videoFile').files[0];
             const presignedUrl = await getPresignedUrl(file.name);
             
-            const response = await fetch(presignedUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': file.type
-                },
-                body: file
-            });
+            const xhr = new XMLHttpRequest();
+            xhr.open('PUT', presignedUrl, true);
+            xhr.setRequestHeader('Content-Type', file.type);
 
-            if (response.ok) {
-                alert('File uploaded successfully!');
-            } else {
-                alert('File upload failed.');
-            }
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    document.getElementById('progressWrapper').style.display = 'block';
+                    document.getElementById('progressBar').style.width = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                document.getElementById('progressWrapper').style.display = 'none';
+                const messageElement = document.getElementById('message');
+                if (xhr.status === 200) {
+                    messageElement.style.display = 'block';
+                    messageElement.style.color = 'green';
+                    messageElement.textContent = 'File uploaded successfully!';
+                } else {
+                    messageElement.style.display = 'block';
+                    messageElement.style.color = 'red';
+                    messageElement.textContent = 'File upload failed.';
+                }
+            };
+
+            xhr.onerror = function() {
+                document.getElementById('progressWrapper').style.display = 'none';
+                const messageElement = document.getElementById('message');
+                messageElement.style.display = 'block';
+                messageElement.style.color = 'red';
+                messageElement.textContent = 'File upload failed.';
+            };
+
+            xhr.send(file);
         });
     </script>
 </body>
