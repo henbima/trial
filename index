@@ -45,7 +45,7 @@
                 }
             };
 
-            xhr.open("POST", "https://us-central1-holly-transcribe.cloudfunctions.net/video-transcription-function", true);
+            xhr.open("POST", "https://video-transcription-function-stf7l4vdyq-uc.a.run.app/", true);
             xhr.send(formData);
         }
     </script>
