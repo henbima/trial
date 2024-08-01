@@ -1,15 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Upload</title>
+    <title>Video Uploader</title>
     <style>
         #progress-bar {
-            width: 100%;
-            background-color: #f3f3f3;
-        }
-        #progress {
             width: 0;
             height: 30px;
             background-color: #4caf50;
@@ -17,47 +11,43 @@
             line-height: 30px;
             color: white;
         }
+        #progress-container {
+            width: 100%;
+            background-color: #ddd;
+        }
     </style>
 </head>
 <body>
-    <h1>Upload Video</h1>
-    <form id="upload-form">
-        <input type="file" id="video-file" accept="video/*" required>
-        <br><br>
-        <button type="submit">Upload</button>
-    </form>
-    <div id="progress-bar">
-        <div id="progress">0%</div>
+    <h2>Upload Video</h2>
+    <input type="file" id="file-input" accept="video/*"><br><br>
+    <div id="progress-container">
+        <div id="progress-bar">0%</div>
     </div>
-    <div id="upload-status"></div>
+    <br>
+    <button onclick="uploadFile()">Upload</button>
 
     <script>
-        document.getElementById('upload-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const file = document.getElementById('video-file').files[0];
-            if (file) {
-                const formData = new FormData();
-                formData.append('file', file);
+        function uploadFile() {
+            var file = document.getElementById("file-input").files[0];
+            var formData = new FormData();
+            formData.append("file", file);
 
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', 'upload', true);
-                xhr.upload.onprogress = function (e) {
-                    if (e.lengthComputable) {
-                        const percentComplete = (e.loaded / e.total) * 100;
-                        document.getElementById('progress').style.width = percentComplete + '%';
-                        document.getElementById('progress').textContent = percentComplete.toFixed(0) + '%';
-                    }
-                };
-                xhr.onload = function () {
-                    if (xhr.status == 200) {
-                        document.getElementById('upload-status').textContent = 'Upload complete!';
-                    } else {
-                        document.getElementById('upload-status').textContent = 'Upload failed.';
-                    }
-                };
-                xhr.send(formData);
-            }
-        });
+            var xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener("progress", function(e) {
+                var percentComplete = Math.round((e.loaded / e.total) * 100);
+                document.getElementById("progress-bar").style.width = percentComplete + "%";
+                document.getElementById("progress-bar").innerHTML = percentComplete + "%";
+            });
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    alert("Upload complete");
+                }
+            };
+
+            xhr.open("POST", "https://us-central1-holly-transcribe.cloudfunctions.net/video-transcription-function", true);
+            xhr.send(formData);
+        }
     </script>
 </body>
 </html>
