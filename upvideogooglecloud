@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upload</title>
+    <style>
+        #progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+        #progress {
+            width: 0;
+            height: 30px;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Video</h1>
+    <form id="upload-form">
+        <input type="file" id="video-file" accept="video/*" required>
+        <br><br>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="progress-bar">
+        <div id="progress">0%</div>
+    </div>
+    <div id="upload-status"></div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const file = document.getElementById('video-file').files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'upload', true);
+                xhr.upload.onprogress = function (e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        document.getElementById('progress').style.width = percentComplete + '%';
+                        document.getElementById('progress').textContent = percentComplete.toFixed(0) + '%';
+                    }
+                };
+                xhr.onload = function () {
+                    if (xhr.status == 200) {
+                        document.getElementById('upload-status').textContent = 'Upload complete!';
+                    } else {
+                        document.getElementById('upload-status').textContent = 'Upload failed.';
+                    }
+                };
+                xhr.send(formData);
+            }
+        });
+    </script>
+</body>
+</html>
